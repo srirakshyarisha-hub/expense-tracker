@@ -1,10 +1,9 @@
-"""expense_tracker URL Configuration"""
-from django.contrib import admin
-from django.urls import path, include
-from django.views.generic import TemplateView
+from django.urls import path
+
+from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('expenses.urls')),
-    path('', TemplateView.as_view(template_name='index.html'), name='home'),
+    path('expenses/', views.ExpenseListCreateView.as_view(), name='expense-list-create'),
+    path('expenses/<int:pk>/', views.ExpenseDetailView.as_view(), name='expense-detail'),
+    path('dashboard/', views.dashboard_stats, name='dashboard-stats'),
 ]
