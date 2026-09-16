@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Tracker | CRUD Web Application</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon">💰</span>
+      <span class="brand-text">ExpenseTracker</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-view="dashboard-view">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a href="#" class="nav-item" data-view="expenses-view">
+        <span class="nav-icon">🧾</span> Expenses
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <p>Mini Project<br><strong>CRUD Web Application</strong></p>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <header class="topbar">
+      <button class="hamburger" id="hamburger">☰</button>
+      <h1 id="pageTitle">Dashboard</h1>
+      <button class="btn btn-primary" id="quickAddBtn">+ Add Expense</button>
+    </header>
+
+    <div class="content">
+
+      <!-- Toast -->
+      <div id="toast" class="toast"></div>
+
+      <!-- DASHBOARD VIEW -->
+      <section id="dashboard-view" class="view active">
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-blue">🧾</div>
+            <div>
+              <p class="stat-label">Total Expenses</p>
+              <h2 class="stat-value" id="statTotalExpenses">0</h2>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-green">💵</div>
+            <div>
+              <p class="stat-label">Total Amount Spent</p>
+              <h2 class="stat-value" id="statTotalAmount">₹0</h2>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-orange">📅</div>
+            <div>
+              <p class="stat-label">This Month</p>
+              <h2 class="stat-value" id="statMonthAmount">₹0</h2>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-purple">🏷️</div>
+            <div>
+              <p class="stat-label">Categories Used</p>
+              <h2 class="stat-value" id="statTotalCategories">0</h2>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Spending by Category</h3>
+            </div>
+            <div id="categoryBreakdown" class="category-breakdown"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Recent Expenses</h3>
+              <a href="#" class="link-btn" data-view="expenses-view">View all →</a>
+            </div>
+            <div id="recentExpenses" class="recent-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- EXPENSES VIEW -->
+      <section id="expenses-view" class="view">
+
+        <div class="toolbar">
+          <div class="search-box">
+            <span>🔍</span>
+            <input type="text" id="searchInput" placeholder="Search by title or description...">
+          </div>
+
+          <select id="filterCategory">
+            <option value="">All Categories</option>
+          </select>
+
+          <select id="filterPayment">
+            <option value="">All Payment Methods</option>
+          </select>
+
+          <select id="sortBy">
+            <option value="-expense_date">Newest First</option>
+            <option value="expense_date">Oldest First</option>
+            <option value="-amount">Amount: High to Low</option>
+            <option value="amount">Amount: Low to High</option>
+            <option value="title">Title: A-Z</option>
+          </select>
+
+          <button class="btn btn-outline" id="clearFiltersBtn">Clear</button>
+        </div>
+
+        <div id="loadingState" class="loading-state" style="display:none;">
+          <div class="spinner"></div>
+          <p>Loading expenses...</p>
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display:none;">
+          <div class="empty-icon">🗂️</div>
+          <h3>No expenses found</h3>
+          <p>Try adjusting your filters, or add your first expense.</p>
+          <button class="btn btn-primary" id="emptyAddBtn">+ Add Expense</button>
+        </div>
+
+        <div id="expenseGrid" class="expense-grid"></div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- Add / Edit Modal -->
+<div class="modal-overlay" id="formModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="formModalTitle">Add Expense</h3>
+      <button class="modal-close" data-close="formModalOverlay">&times;</button>
+    </div>
+    <form id="expenseForm" class="modal-body">
+      <input type="hidden" id="expenseId">
+
+      <div class="form-group">
+        <label for="title">Title *</label>
+        <input type="text" id="title" placeholder="e.g. Grocery Shopping" required>
+        <span class="error-msg" id="err-title"></span>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="amount">Amount (₹) *</label>
+          <input type="number" id="amount" min="0.01" step="0.01" placeholder="0.00" required>
+          <span class="error-msg" id="err-amount"></span>
+        </div>
+        <div class="form-group">
+          <label for="expense_date">Date *</label>
+          <input type="date" id="expense_date" required>
+          <span class="error-msg" id="err-expense_date"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category">Category *</label>
+          <select id="category" required>
+            <option value="">Select category</option>
+            <option>Food</option>
+            <option>Transport</option>
+            <option>Shopping</option>
+            <option>Bills</option>
+            <option>Entertainment</option>
+            <option>Health</option>
+            <option>Education</option>
+            <option>Rent</option>
+            <option>Groceries</option>
+            <option>Other</option>
+          </select>
+          <span class="error-msg" id="err-category"></span>
+        </div>
+        <div class="form-group">
+          <label for="payment_method">Payment Method *</label>
+          <select id="payment_method" required>
+            <option value="">Select method</option>
+            <option>Cash</option>
+            <option>Card</option>
+            <option>UPI</option>
+            <option>Net Banking</option>
+            <option>Other</option>
+          </select>
+          <span class="error-msg" id="err-payment_method"></span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" rows="3" placeholder="Optional notes..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close="formModalOverlay">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveExpenseBtn">Save Expense</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View Modal -->
+<div class="modal-overlay" id="viewModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Expense Details</h3>
+      <button class="modal-close" data-close="viewModalOverlay">&times;</button>
+    </div>
+    <div class="modal-body" id="viewModalBody"></div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close="viewModalOverlay">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="deleteModalOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Delete Expense</h3>
+      <button class="modal-close" data-close="deleteModalOverlay">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to delete "<strong id="deleteExpenseTitle"></strong>"? This cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close="deleteModalOverlay">Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>
